@@ -1,4 +1,28 @@
+load("@bazel_tools//tools/python:toolchain.bzl", "py_runtime_pair")
+
 package(default_visibility = ["//visibility:public"])
+
+py_runtime(
+    name = "prebuilt_python3",
+    files = [":linux-x86"],
+    interpreter = "bin/python3",
+    python_version = "PY3",
+)
+
+py_runtime_pair(
+    name = "prebuilt_python",
+    py2_runtime = None,
+    py3_runtime = ":prebuilt_python3",
+)
+
+toolchain(
+    name = "python_toolchain",
+    exec_compatible_with = [
+        "@platforms//os:linux",
+    ],
+    toolchain = ":prebuilt_python",
+    toolchain_type = "@bazel_tools//tools/python:toolchain_type",
+)
 
 filegroup(
     name = "linux-x86",
