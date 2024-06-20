@@ -34,6 +34,7 @@ filegroup(
     srcs = glob(
         include = ["lib/python3.10/**"],
         exclude = [
+            "lib/python3.10/**/*.pyc",
             "lib/python3.10/test/**",
             "lib/python3.10/unittest/**",
             "lib/python3.10/config/**",
