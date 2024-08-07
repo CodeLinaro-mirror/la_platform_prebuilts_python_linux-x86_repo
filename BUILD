@@ -26,7 +26,10 @@ toolchain(
 
 filegroup(
     name = "linux-x86",
-    srcs = glob(["**"]),
+    srcs = glob(
+        include = ["**"],
+        exclude = ["**/*.pyc"],
+    ),
 )
 
 filegroup(
