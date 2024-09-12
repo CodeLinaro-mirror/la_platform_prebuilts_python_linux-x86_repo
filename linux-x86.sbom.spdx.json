@@ -16,10 +16,10 @@
     "SPDXID" : "SPDXRef-FORK-GITHUB-python-cpython",
     "comment" : "This component was freely obtained by Google and maybe modified. Google is not the original author.",
     "copyrightText" : "NOASSERTION",
-    "downloadLocation" : "git+android.googlesource.com/platform/superproject@0a056b8eab972fe7be05858265dda3411a294a92#external/python/cpython3",
+    "downloadLocation" : "git+android.googlesource.com/platform/superproject@fce2346610379fdcce9dc7423c0e9a04e1a43cbf#external/python/cpython3",
     "externalRefs" : [ {
       "referenceCategory" : "PACKAGE-MANAGER",
-      "referenceLocator" : "pkg:generic/android?vcs_url=git%2Bhttps://android.googlesource.com/platform/superproject%400a056b8eab972fe7be05858265dda3411a294a92",
+      "referenceLocator" : "pkg:generic/android?vcs_url=git%2Bhttps://android.googlesource.com/platform/superproject%40fce2346610379fdcce9dc7423c0e9a04e1a43cbf",
       "referenceType" : "purl"
     } ],
     "filesAnalyzed" : false,
@@ -28,15 +28,15 @@
     "name" : "Fork of The Python programming language",
     "originator" : "Organization: Python Software Foundation",
     "supplier" : "Organization: Google LLC",
-    "versionInfo" : "3.10.3"
+    "versionInfo" : "3.11.4"
   }, {
     "SPDXID" : "SPDXRef-SOURCE-GITHUB-python-cpython",
     "comment" : "This component was freely obtained by Google. Google is not the original author.",
     "copyrightText" : "NOASSERTION",
-    "downloadLocation" : "git+https://github.com/python/cpython@v3.10.3",
+    "downloadLocation" : "git+https://github.com/python/cpython@v3.11.4",
     "externalRefs" : [ {
       "referenceCategory" : "PACKAGE-MANAGER",
-      "referenceLocator" : "pkg:github/python/cpython@v3.10.3",
+      "referenceLocator" : "pkg:github/python/cpython@v3.11.4",
       "referenceType" : "purl"
     } ],
     "filesAnalyzed" : false,
@@ -44,7 +44,7 @@
     "licenseDeclared" : "LicenseRef-SPDXRef-SOURCE-GITHUB-python-cpython",
     "name" : "The Python programming language",
     "supplier" : "Organization: Python Software Foundation",
-    "versionInfo" : "3.10.3"
+    "versionInfo" : "3.11.4"
   }, {
     "SPDXID" : "SPDXRef-PREBUILT-GITHUB-python-cpython",
     "copyrightText" : "NOASSERTION",
@@ -55,7 +55,7 @@
     "name" : "The Python programming language",
     "originator" : "Organization: Python Software Foundation",
     "supplier" : "Organization: Google, LLC",
-    "versionInfo" : "3.10.3"
+    "versionInfo" : "3.11.4"
   } ],
   "relationships" : [ {
     "spdxElementId" : "SPDXRef-DOCUMENT",
