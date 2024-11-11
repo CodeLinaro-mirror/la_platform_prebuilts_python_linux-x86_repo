@@ -30,7 +30,7 @@ filegroup(
         include = ["**"],
         exclude = [
             "**/*.pyc",
-            "lib/python3.11/__pycache__/**",
+            "lib/python3.11/**/__pycache__/**",
         ],
     ),
 )
@@ -40,7 +40,7 @@ filegroup(
     srcs = glob(
         include = ["lib/python3.11/**"],
         exclude = [
-            "lib/python3.11/__pycache__/**",
+            "lib/python3.11/**/__pycache__/**",
             "lib/python3.11/**/*.pyc",
             "lib/python3.11/test/**",
             "lib/python3.11/unittest/**",
