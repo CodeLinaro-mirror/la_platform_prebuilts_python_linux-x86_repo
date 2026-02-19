@@ -1,5 +1,6 @@
 load("@rules_python//python:py_runtime.bzl", "py_runtime")
 load("@rules_python//python:py_runtime_pair.bzl", "py_runtime_pair")
+load("@rules_python//python:py_exec_tools_toolchain.bzl", "py_exec_tools_toolchain")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -8,6 +9,11 @@ py_runtime(
     files = [":linux-x86"],
     interpreter = "bin/python3",
     python_version = "PY3",
+)
+
+py_exec_tools_toolchain(
+    name = "exec_tools_toolchain_impl",
+    exec_interpreter = "@rules_python//python:none",
 )
 
 py_runtime_pair(
@@ -23,6 +29,13 @@ toolchain(
     ],
     toolchain = ":prebuilt_python",
     toolchain_type = "@bazel_tools//tools/python:toolchain_type",
+)
+
+toolchain(
+    name = "exec_tools_toolchain",
+    toolchain = ":exec_tools_toolchain_impl",
+    toolchain_type = "@rules_python//python:exec_tools_toolchain_type",
+    exec_compatible_with = ["@platforms//os:linux"],
 )
 
 filegroup(
