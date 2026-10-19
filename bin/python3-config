@@ -4,7 +4,13 @@
 
 exit_with_usage ()
 {
-    echo "Usage: $0 --prefix|--exec-prefix|--includes|--libs|--cflags|--ldflags|--extension-suffix|--help|--abiflags|--configdir|--embed"
+    local usage
+    usage="Usage: $0 --prefix|--exec-prefix|--includes|--libs|--cflags|--ldflags|--extension-suffix|--help|--abiflags|--configdir|--embed"
+    if [ "$1" -eq 0 ]; then
+        echo "$usage"
+    else
+        echo "$usage" >&2
+    fi
     exit $1
 }
 
@@ -30,27 +36,27 @@ prefix_real=$(installed_prefix "$0")
 # locations. Keep prefix & exec_prefix using their original values in case
 # they are referenced in other configure variables, to prevent double
 # substitution, issue #22140.
-prefix="/tmpfs/src/git/out/python3/install"
+prefix="/build/out/python3/install"
 exec_prefix="${prefix}"
 exec_prefix_real=${prefix_real}
 includedir=$(echo "${prefix}/include" | sed "s#$prefix#$prefix_real#")
 libdir=$(echo "${exec_prefix}/lib" | sed "s#$prefix#$prefix_real#")
 CFLAGS=$(echo "-Wno-unused-command-line-argument" | sed "s#$prefix#$prefix_real#")
-VERSION="3.11"
+VERSION="3.13"
 LIBM="-lm"
 LIBC=""
 SYSLIBS="$LIBM $LIBC"
 ABIFLAGS=""
 LIBS=" -lpthread -ldl  -lutil $SYSLIBS"
 LIBS_EMBED="-lpython${VERSION}${ABIFLAGS} -lpthread -ldl  -lutil $SYSLIBS"
-BASECFLAGS=" -Wsign-compare"
+BASECFLAGS=" -fno-strict-overflow -Wsign-compare"
 LDLIBRARY="libpython${LDVERSION}.so"
-OPT="-DNDEBUG -g  -O3 -Wall"
+OPT="-DNDEBUG -g -O3 -Wall"
 PY_ENABLE_SHARED="1"
 LDVERSION="${VERSION}${ABIFLAGS}"
 LIBDEST=${prefix_real}/lib/python${VERSION}
-LIBPL=$(echo "${prefix}/lib/python3.11/config-${VERSION}${ABIFLAGS}-x86_64-linux-gnu" | sed "s#$prefix#$prefix_real#")
-SO=".cpython-311-x86_64-linux-gnu.so"
+LIBPL=$(echo "${prefix}/lib/python3.13/config-${VERSION}${ABIFLAGS}-x86_64-linux-gnu" | sed "s#$prefix#$prefix_real#")
+SO=".cpython-313-x86_64-linux-gnu.so"
 PYTHONFRAMEWORK=""
 INCDIR="-I$includedir/python${VERSION}${ABIFLAGS}"
 PLATINCDIR="-I$includedir/python${VERSION}${ABIFLAGS}"
