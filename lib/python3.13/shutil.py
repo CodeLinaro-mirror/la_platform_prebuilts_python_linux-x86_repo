@@ -650,6 +650,7 @@ def _rmtree_safe_fd(stack, onexc):
     #   save a call to os.lstat() when walking subdirectories.
     func, dirfd, path, orig_entry = stack.pop()
     name = path if orig_entry is None else orig_entry.name
+    parent_fd = None if func is os.close else dirfd
     try:
         if func is os.close:
             os.close(dirfd)
@@ -697,21 +698,22 @@ def _rmtree_safe_fd(stack, onexc):
             except FileNotFoundError:
                 continue
             except OSError as err:
-                onexc(os.unlink, fullname, err)
+                onexc(os.unlink, fullname, err, direntry=entry, dir_fd=topfd)
     except FileNotFoundError as err:
         if orig_entry is None or func is os.close:
             err.filename = path
-            onexc(func, path, err)
+            onexc(func, path, err, direntry=orig_entry, dir_fd=parent_fd)
     except OSError as err:
         err.filename = path
-        onexc(func, path, err)
+        onexc(func, path, err, direntry=orig_entry, dir_fd=parent_fd)
 
 _use_fd_functions = ({os.open, os.stat, os.unlink, os.rmdir} <=
                      os.supports_dir_fd and
                      os.scandir in os.supports_fd and
                      os.stat in os.supports_follow_symlinks)
 
-def rmtree(path, ignore_errors=False, onerror=None, *, onexc=None, dir_fd=None):
+def rmtree(path, ignore_errors=False, onerror=None, *, onexc=None, dir_fd=None,
+           _onexc_kwargs=False):
     """Recursively delete a directory tree.
 
     If dir_fd is not None, it should be a file descriptor open to a directory;
@@ -734,24 +736,29 @@ def rmtree(path, ignore_errors=False, onerror=None, *, onexc=None, dir_fd=None):
 
     sys.audit("shutil.rmtree", path, dir_fd)
     if ignore_errors:
-        def onexc(*args):
+        def onexc(*args, **kwargs):
             pass
     elif onerror is None and onexc is None:
-        def onexc(*args):
+        def onexc(*args, **kwargs):
             raise
     elif onexc is None:
         if onerror is None:
-            def onexc(*args):
+            def onexc(*args, **kwargs):
                 raise
         else:
             # delegate to onerror
-            def onexc(*args):
+            def onexc(*args, **kwargs):
                 func, path, exc = args
                 if exc is None:
                     exc_info = None, None, None
                 else:
                     exc_info = type(exc), exc, exc.__traceback__
                 return onerror(func, path, exc_info)
+    elif not _onexc_kwargs:
+        # Only the internal caller in tempfile asks for the extra arguments.
+        _onexc = onexc
+        def onexc(func, path, err, **kwargs):
+            return _onexc(func, path, err)
 
     if _use_fd_functions:
         # While the unsafe rmtree works fine on bytes, the fd based does not.
@@ -823,10 +830,14 @@ def move(src, dst, copy_function=copy2):
     If dst already exists but is not a directory, it may be overwritten
     depending on os.rename() semantics.
 
-    If the destination is on our current filesystem, then rename() is used.
-    Otherwise, src is copied to the destination and then removed. Symlinks are
-    recreated under the new name if os.rename() fails because of cross
-    filesystem renames.
+    os.rename() is preferably used if the source and destination are on the
+    same filesystem. In case os.rename() fails due to OSError (e.g. the user
+    has write permission to *dst* file but not to its parent directory),
+    this method falls back to using *copy_function* silently.
+    Symlinks are also recreated under the new name if os.rename() fails
+    because of cross filesystem renames.
+
+    It's recommended to use os.rename() if atomic move is strictly required.
 
     The optional `copy_function` argument is a callable that will be used
     to copy the source or it will be delegated to `copytree`.
@@ -878,8 +889,8 @@ def move(src, dst, copy_function=copy2):
     return real_dst
 
 def _destinsrc(src, dst):
-    src = os.path.abspath(src)
-    dst = os.path.abspath(dst)
+    src = os.path.realpath(src)
+    dst = os.path.realpath(dst)
     if not src.endswith(os.path.sep):
         src += os.path.sep
     if not dst.endswith(os.path.sep):
@@ -1246,27 +1257,9 @@ def _unpack_zipfile(filename, extract_dir):
     if not zipfile.is_zipfile(filename):
         raise ReadError("%s is not a zip file" % filename)
 
-    zip = zipfile.ZipFile(filename)
-    try:
-        for info in zip.infolist():
-            name = info.filename
-
-            # don't extract absolute paths or ones with .. in them
-            if name.startswith('/') or '..' in name:
-                continue
-
-            targetpath = os.path.join(extract_dir, *name.split('/'))
-            if not targetpath:
-                continue
-
-            _ensure_directory(targetpath)
-            if not name.endswith('/'):
-                # file
-                with zip.open(name, 'r') as source, \
-                        open(targetpath, 'wb') as target:
-                    copyfileobj(source, target)
-    finally:
-        zip.close()
+    with zipfile.ZipFile(filename) as zip:
+        zip._ignore_invalid_names = True
+        zip.extractall(extract_dir)
 
 def _unpack_tarfile(filename, extract_dir, *, filter=None):
     """Unpack tar/tar.gz/tar.bz2/tar.xz `filename` to `extract_dir`

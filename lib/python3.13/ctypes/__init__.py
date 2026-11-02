@@ -398,6 +398,8 @@ class CDLL(object):
                 if name and name.endswith(")") and ".a(" in name:
                     mode |= _os.RTLD_MEMBER | _os.RTLD_NOW
             self._name = name
+            if handle is not None:
+                return handle
             return _dlopen(name, mode)
 
     def __repr__(self):
@@ -490,7 +492,10 @@ elif _sys.platform in ["android", "cygwin"]:
     # These are Unix-like platforms which use a dynamically-linked libpython.
     pythonapi = PyDLL(_sysconfig.get_config_var("LDLIBRARY"))
 else:
-    pythonapi = PyDLL(None)
+    try:
+        pythonapi = PyDLL(None)
+    except OSError:
+        pythonapi = None
 
 
 if _os.name == "nt":

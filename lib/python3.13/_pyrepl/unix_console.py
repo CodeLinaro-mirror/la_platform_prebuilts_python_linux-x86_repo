@@ -258,8 +258,9 @@ class UnixConsole(Console):
         if not self.__gone_tall:
             while len(self.screen) < min(len(screen), self.height):
                 self.__hide_cursor()
-                self.__move(0, len(self.screen) - 1)
-                self.__write("\n")
+                if self.screen:
+                    self.__move(0, len(self.screen) - 1)
+                    self.__write("\n")
                 self.posxy = 0, len(self.screen)
                 self.screen.append("")
         else:
@@ -362,6 +363,7 @@ class UnixConsole(Console):
         raw.cc[termios.VMIN] = 1
         raw.cc[termios.VTIME] = 0
         self.__input_fd_set(raw)
+        self.__rawtermstate = raw
 
         # In macOS terminal we need to deactivate line wrap via ANSI escape code
         if self.is_apple_terminal:
@@ -598,7 +600,20 @@ class UnixConsole(Console):
         except ImportError:
             return None
         if posix._is_inputhook_installed():
-            return posix._inputhook
+            return self.__run_input_hook
+
+    def __run_input_hook(self):
+        import posix
+        # gh-152907: input hooks expect cooked output, but pyrepl runs with
+        # OPOST disabled.  Restore the saved output flags around the hook
+        # (only oflag; input must stay raw at the prompt).
+        cooked = self.__rawtermstate.copy()
+        cooked.oflag = self.__svtermstate.oflag
+        self.__input_fd_set(cooked)
+        try:
+            return posix._inputhook()
+        finally:
+            self.__input_fd_set(self.__rawtermstate)
 
     def __enable_bracketed_paste(self) -> None:
         os.write(self.output_fd, b"\x1b[?2004h")
@@ -817,7 +832,7 @@ class UnixConsole(Console):
         will never do anyone any good."""
         # using .get() means that things will blow up
         # only if the bps is actually needed (which I'm
-        # betting is pretty unlkely)
+        # betting is pretty unlikely)
         bps = ratedict.get(self.__svtermstate.ospeed)
         while 1:
             m = prog.search(fmt)
